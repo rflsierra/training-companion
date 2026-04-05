@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Training Companion</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f9fafb">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f9fafb;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--light:#e5e7eb;
+  --teal:#0d9488;--teal-bg:#ccfbf1;--teal-ring:rgba(13,148,136,.35);
+  --purple:#7c3aed;--purple-bg:#ede9fe;
+  --blue:#2563eb;--blue-bg:#dbeafe;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --emerald:#059669;--emerald-bg:#d1fae5;
+  --orange:#ea580c;--orange-bg:#ffedd5;
+  --pink:#db2777;--pink-bg:#fce7f3;
+  --rose:#e11d48;--rose-bg:#ffe4e6;--rose-border:#fda4af;
+  --red:#dc2626;
+  --indigo:#4f46e5;--indigo-bg:#e0e7ff;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+.app{max-width:480px;margin:0 auto;padding:12px 12px 80px}
+
+/* Day selector */
+.day-bar{display:flex;gap:4px;margin-bottom:12px}
+.day-btn{flex:1;border:none;border-radius:10px;padding:8px 2px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.06);font-family:inherit}
+.day-btn.sel{background:#1a1a2e;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.day-btn.today:not(.sel){box-shadow:0 0 0 2px var(--teal-ring)}
+.day-btn .lbl{font-size:12px;font-weight:700}
+.day-btn .ico{font-size:10px;margin-top:2px;opacity:.7}
+.day-btn .dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--amber);border-radius:50%}
+
+/* Week bar */
+.week-bar{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);border:1px solid var(--light)}
+.week-info{flex:1}
+.week-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.week-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.wk-btns{display:flex;gap:4px}
+.wk-btn{width:28px;height:28px;border-radius:50%;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.wk-btn.on{background:var(--teal);color:#fff}
+.wk-btn.on.deload{background:var(--amber);color:#fff}
+.wk-btn.off{background:#f3f4f6;color:#9ca3af}
+
+/* Panels */
+.panel-btn{width:100%;text-align:left;border:none;font-size:12px;padding:8px 12px;margin-bottom:6px;border-radius:10px;cursor:pointer;font-weight:600;font-family:inherit;transition:background .15s}
+.panel-btn.guard{background:var(--rose-bg);color:#9f1239}
+.panel-btn.busy{background:var(--amber-bg);color:#92400e}
+.panel-btn.prog{background:var(--indigo-bg);color:var(--indigo)}
+.panel-content{margin-bottom:12px;border-radius:10px;padding:12px;font-size:11px;line-height:1.6}
+.panel-content.guard{background:var(--rose-bg);border:1px solid var(--rose-border);color:#881337}
+.panel-content.busy{background:var(--amber-bg);border:1px solid #fcd34d;color:#78350f}
+.panel-content b{font-weight:600}
+.panel-content .section-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.panel-content .mt{margin-top:8px}
+
+/* Progression tabs */
+.prog-tabs{display:flex;border-radius:10px 10px 0 0;overflow:hidden}
+.prog-tab{flex:1;border:none;font-size:10px;font-weight:700;padding:8px 4px;cursor:pointer;font-family:inherit;transition:all .15s}
+.prog-tab.on-0{background:var(--teal-bg);color:var(--teal)}
+.prog-tab.on-1{background:var(--blue-bg);color:var(--blue)}
+.prog-tab.on-2{background:var(--purple-bg);color:var(--purple)}
+.prog-tab.off{background:#f9fafb;color:#9ca3af}
+.prog-body{background:var(--card);border:1px solid var(--light);border-top:none;border-radius:0 0 10px 10px;padding:12px;margin-bottom:12px}
+.prog-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-bottom:8px}
+
+/* Day card */
+.day-card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--light);margin-bottom:12px}
+.day-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.day-header .emoji{font-size:22px}
+.day-header h2{font-size:18px;font-weight:700}
+.day-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
+.day-summary{font-size:12px;color:var(--muted);margin-bottom:12px}
+.missed-banner{font-size:11px;color:#92400e;background:var(--amber-bg);border:1px solid #fcd34d;border-radius:10px;padding:6px 12px;margin-bottom:12px;font-weight:500}
+
+/* Block cards */
+.block{border-left:4px solid;border-radius:0 10px 10px 0;padding:12px;margin-bottom:8px;transition:opacity .2s}
+.block.missed{opacity:.45}
+.block-header{display:flex;align-items:center;gap:8px}
+.miss-btn{width:24px;height:24px;border-radius:50%;border:2px solid #d1d5db;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#d1d5db;flex-shrink:0;transition:all .15s;font-family:inherit}
+.miss-btn.missed{background:#fee2e2;border-color:#f87171;color:#dc2626}
+.block-info{flex:1;cursor:pointer}
+.block-title{display:flex;align-items:center;gap:6px}
+.block-title .ico{font-size:14px}
+.block-title .name{font-weight:600;font-size:14px}
+.block-title .name.struck{text-decoration:line-through;color:#9ca3af}
+.block-dur{font-size:12px;color:var(--muted);margin-left:22px}
+.block-expand{color:#9ca3af;font-size:12px;cursor:pointer;padding:4px}
+
+/* Alternatives */
+.alts{margin:8px 0 0 32px;background:rgba(251,191,36,.15);border:1px solid #fcd34d;border-radius:10px;padding:10px}
+.alts-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px}
+.alt-item{margin-bottom:6px}
+.alt-item:last-child{margin-bottom:0}
+.alt-name{font-size:12px;font-weight:600;color:#78350f}
+.alt-time{font-size:10px;background:#fde68a;color:#78350f;padding:1px 6px;border-radius:4px;margin-left:6px}
+.alt-desc{font-size:11px;color:#92400e;margin-top:2px}
+
+/* Exercise content */
+.block-content{margin:8px 0 0 24px}
+.ex-group{margin-bottom:8px}
+.ex-group-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 4px}
+.ex-item{border-left:2px solid var(--light);padding:6px 0 6px 12px;margin-bottom:2px}
+.ex-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.ex-main{flex:1}
+.ex-name{font-weight:600;font-size:13px}
+.ex-detail{font-size:12px;color:var(--muted);margin-left:6px}
+.ex-deload{font-size:12px;color:var(--amber);margin-left:4px}
+.vid-btn{flex-shrink:0;font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 6px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;transition:background .15s}
+.vid-btn:hover{background:#fee2e2}
+.ex-meta{margin-top:4px;font-size:12px;color:var(--muted)}
+.ex-meta b{color:#4b5563;font-weight:600}
+.ex-meta .note{font-style:italic;margin-top:2px}
+.block-notes{margin:8px 0 0 24px;font-size:12px;color:#374151;white-space:pre-wrap;line-height:1.6}
+.notes-btn{border:none;background:none;font-size:11px;color:var(--muted);font-weight:500;cursor:pointer;padding:4px 0;font-family:inherit}
+
+/* PF reminder */
+.pf-reminder{margin-top:12px;background:var(--rose-bg);border:1px solid var(--rose-border);border-radius:10px;padding:10px;text-align:center}
+.pf-reminder .main{font-size:11px;color:#9f1239;font-weight:600}
+.pf-reminder .sub{font-size:10px;color:#be123c;margin-top:3px}
+
+/* Footer */
+.footer{margin-top:16px;text-align:center;font-size:9px;color:#9ca3af;line-height:1.8}
+
+.hint{margin-top:12px;text-align:center;font-size:10px;color:#9ca3af}
+
+/* Tag colors */
+.tag-teal{background:var(--teal-bg);color:var(--teal)}
+.tag-purple{background:var(--purple-bg);color:var(--purple)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.tag-emerald{background:var(--emerald-bg);color:var(--emerald)}
+.tag-orange{background:var(--orange-bg);color:var(--orange)}
+.tag-pink{background:var(--pink-bg);color:var(--pink)}
+
+/* Block border colors */
+.bl-teal{border-color:var(--teal);background:var(--teal-bg)}
+.bl-purple{border-color:var(--purple);background:var(--purple-bg)}
+.bl-amber{border-color:var(--amber);background:var(--amber-bg)}
+.bl-blue{border-color:var(--blue);background:var(--blue-bg)}
+.bl-emerald{border-color:var(--emerald);background:var(--emerald-bg)}
+.bl-orange{border-color:var(--orange);background:var(--orange-bg)}
+.bl-pink{border-color:var(--pink);background:var(--pink-bg)}
+.bl-rose{border-color:#fb7185;background:var(--rose-bg)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const YT = (q) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q + " form tutorial")}`;
+const E = { dash:"\u2013", mdash:"\u2014", times:"\u00d7", arrow:"\u2192", leq:"\u2264", geq:"\u2265", bullet:"\u2022", zap:"\u26a1", x:"\u2715", check:"\u2713", tri:"\u25b8", triD:"\u25be", play:"\u25b6" };
+
+const DAYS_DATA = {
+  Mon: {
+    label:"Monday", tag:"EASY RUN", tagCls:"tag-teal", emoji:"\uD83C\uDFC3\u200D\u2640\uFE0F",
+    summary:"Easy run + core/pelvic floor activation. Conversational pace.",
+    blocks:[
+      { id:"mon-run", type:"run", title:"Easy Run", duration:`25${E.dash}30 min`, color:"teal", skippable:true,
+        notes:`Warm-up: walk 3 min + connection breathing ${E.times}10.\nRun 20${E.dash}25 min at easy/conversational pace.\nWalk breaks as needed ${E.mdash} zero guilt.\nNose-breathing effort.`,
+        alternatives:[
+          { name:"Walk/Run Intervals", time:"25 min", desc:`Walk 2 min / jog 3 min ${E.times}5. Great starting point.` },
+          { name:"Brisk Walk", time:`25${E.dash}30 min`, desc:"Incline if on treadmill. Keep it moving." },
+        ]},
+      { id:"mon-core", type:"core", title:"Core + Pelvic Floor", duration:`5${E.dash}10 min`, color:"rose",
+        exercises:[
+          { id:"C", label:"Post-Run Core/PF", items:[
+            { name:"Dead Bug (slow)", detail:`2${E.times}6${E.dash}8/side`, muscles:"Deep core, transverse abdominis", note:"Exhale on extend. Keep lower back pressed to floor. Stop if doming.", yt:"dead bug exercise postpartum" },
+            { name:"Glute Bridge + PF Squeeze", detail:`2${E.times}10`, muscles:"Glutes, pelvic floor", note:"Exhale to lift, gently squeeze PF at top, inhale to lower.", yt:"glute bridge pelvic floor activation" },
+            { name:"Diaphragmatic Breathing", detail:"1 min", muscles:"Diaphragm, PF coordination", note:`Inhale: belly expands, PF relaxes. Exhale: PF lifts, navel draws in.`, yt:"diaphragmatic breathing pelvic floor" },
+          ]}
+        ]},
+    ]
+  },
+  Tue: {
+    label:"Tuesday", tag:"LOWER BODY", tagCls:"tag-purple", emoji:"\uD83D\uDCAA",
+    summary:"Glutes, hamstrings, quads + targeted DR/PF core rehab.",
+    blocks:[
+      { id:"tue-str", type:"strength", title:`Strength A ${E.mdash} Lower Body`, duration:`30${E.dash}35 min`, color:"purple",
+        exercises:[
+          { id:"A", label:"Block A (3 supersets)", items:[
+            { name:"Goblet Squat (DB/KB)", detail:`3${E.times}8${E.dash}12 @ 3-0-1`, muscles:"Quads, glutes", note:`Exhale on the way up. Brace gently ${E.mdash} no breath-holding.`, yt:"goblet squat dumbbell form" },
+            { name:"DB Romanian Deadlift", detail:`3${E.times}8${E.dash}12 @ 3-1-1`, muscles:"Glutes, hamstrings", note:"Hinge: soft knees, hips back, flat back. Feel hamstrings stretch.", yt:"dumbbell romanian deadlift form women" },
+          ]},
+          { id:"B", label:`Block B (2${E.dash}3 supersets)`, items:[
+            { name:"Reverse Lunge or Split Squat", detail:`2${E.dash}3${E.times}8${E.dash}10/side`, muscles:"Quads, glutes, single-leg stability", note:`DB in each hand. Step back, not forward ${E.mdash} easier on knees.`, yt:"reverse lunge dumbbell form" },
+            { name:"Glute Bridge or Hip Thrust", detail:`2${E.dash}3${E.times}10${E.dash}15 @ 2-2-1`, muscles:"Glutes, PF integration", note:"2s squeeze at top. Single-leg for progression.", yt:"hip thrust form women" },
+          ]},
+        ]},
+      { id:"tue-core", type:"core", title:"Core + Pelvic Floor (Rehab)", duration:`8${E.dash}10 min`, color:"rose",
+        exercises:[
+          { id:"C", label:"DR/PF Rehab Block", items:[
+            { name:"Bird Dog", detail:`2${E.times}6${E.dash}8/side`, muscles:"Deep core, anti-rotation", note:`Exhale on extend, hold 2s. Watch for midline doming ${E.mdash} reduce ROM if it happens.`, yt:"bird dog exercise diastasis recti" },
+            { name:"Side-lying Clamshell", detail:`2${E.times}12${E.dash}15/side`, muscles:"Glute medius, deep hip rotators", note:"Supports PF from below. Feet stacked, open top knee.", yt:"clamshell exercise glute" },
+            { name:"Modified Side Plank (from knees)", detail:`2${E.times}15${E.dash}20s/side`, muscles:"Obliques, lateral stability", note:`Progress to full side plank in weeks 5${E.dash}8.`, yt:"modified side plank from knees" },
+            { name:"Pelvic Floor Holds", detail:`5${E.times}5s hold / 10s relax`, muscles:"Pelvic floor", note:"Gentle lift, not max squeeze. Full relaxation is as important as the contraction.", yt:"pelvic floor exercises kegel proper form" },
+          ]}
+        ]},
+    ]
+  },
+  Wed: {
+    label:"Wednesday", tag:"TEMPO RUN", tagCls:"tag-amber", emoji:"\uD83C\uDFC3\u200D\u2640\uFE0F",
+    summary:"The one harder run day. Tempo intervals + core.",
+    blocks:[
+      { id:"wed-run", type:"run", title:"Tempo Run", duration:`25${E.dash}30 min`, color:"amber", skippable:true,
+        notes:`Warm-up: walk 2 min ${E.arrow} easy jog 3 min.\nMain: 3${E.dash}4 ${E.times} 4 min tempo (comfortably hard ${E.mdash} short sentences OK) / 2 min easy jog between.\nCool-down: 5 min easy jog/walk.\n\nIf not ready for tempo: steady run at slightly faster-than-Monday pace.`,
+        alternatives:[
+          { name:"Fartlek Run", time:`25${E.dash}30 min`, desc:`Easy run with 6${E.dash}8 ${E.times} 30s pickups, recover 90s easy.` },
+          { name:"Steady Easy Run", time:`25${E.dash}30 min`, desc:"If fatigued, just run easy. No shame." },
+        ]},
+      { id:"wed-core", type:"core", title:"Core + Pelvic Floor", duration:`5${E.dash}10 min`, color:"rose",
+        exercises:[
+          { id:"C", label:"Post-Run Core/PF", items:[
+            { name:"Dead Bug", detail:`2${E.times}8/side`, muscles:"Deep core", yt:"dead bug exercise postpartum" },
+            { name:"Glute Bridge + PF Squeeze", detail:`2${E.times}10`, muscles:"Glutes, PF", yt:"glute bridge pelvic floor activation" },
+            { name:"Standing Pelvic Floor Lifts", detail:`5${E.times}5s hold`, muscles:"Pelvic floor", note:`Standing version ${E.mdash} more functional. Gentle lift on exhale.`, yt:"standing pelvic floor exercise" },
+          ]}
+        ]},
+    ]
+  },
+  Thu: {
+    label:"Thursday", tag:"UPPER BODY", tagCls:"tag-blue", emoji:"\uD83D\uDCAA",
+    summary:"Push/pull balance, shoulder health, arms + core/PF.",
+    blocks:[
+      { id:"thu-str", type:"strength", title:`Strength B ${E.mdash} Upper Body`, duration:`30${E.dash}35 min`, color:"blue",
+        exercises:[
+          { id:"A", label:"Block A (3 supersets)", items:[
+            { name:"DB Floor Press or Push-ups", detail:`3${E.times}8${E.dash}12`, muscles:"Chest, shoulders, triceps", note:`Incline push-ups (hands on bench) if full are too hard. Floor press is great postpartum ${E.mdash} short ROM, safe.`, yt:"dumbbell floor press form women" },
+            { name:"DB Bent-Over Row", detail:`3${E.times}8${E.dash}12/side`, muscles:"Lats, mid-back", note:"Brace gently. Pull elbow to hip. Great for posture.", yt:"dumbbell bent over row form" },
+          ]},
+          { id:"B", label:`Block B (2${E.dash}3 supersets)`, items:[
+            { name:"DB Shoulder Press (seated)", detail:`2${E.dash}3${E.times}8${E.dash}10`, muscles:"Delts, triceps", note:"Neutral grip (palms facing) is easier on shoulders.", yt:"seated dumbbell shoulder press neutral grip" },
+            { name:"Band Pull-Apart or Rear-Delt Raise", detail:`2${E.dash}3${E.times}12${E.dash}15`, muscles:"Rear delts, posture", note:"Counters forward-rounded shoulders from carrying kids.", yt:"band pull apart exercise" },
+          ]},
+          { id:"opt", label:"Optional (if time)", items:[
+            { name:"DB Bicep Curl", detail:`2${E.times}10${E.dash}12`, muscles:"Biceps", yt:"dumbbell bicep curl form" },
+            { name:"DB Tricep Overhead Extension", detail:`2${E.times}10${E.dash}12`, muscles:"Triceps", yt:"dumbbell overhead tricep extension" },
+          ]},
+        ]},
+      { id:"thu-core", type:"core", title:"Core + Pelvic Floor (Rehab)", duration:`8${E.dash}10 min`, color:"rose",
+        exercises:[
+          { id:"C", label:"DR/PF Rehab Block", items:[
+            { name:"Pallof Press (band)", detail:`2${E.times}8${E.dash}10/side`, muscles:"Anti-rotation core (DR-safe)", note:`Band at chest height. Press forward, hold 2${E.dash}3s. Resists rotation without IAP spike.`, yt:"pallof press band diastasis recti safe" },
+            { name:"Bird Dog", detail:`2${E.times}6${E.dash}8/side`, muscles:"Deep core", yt:"bird dog exercise diastasis recti" },
+            { name:"Heel Slides", detail:`2${E.times}8${E.dash}10/side`, muscles:`Lower abs (DR-safe)`, note:`Supine, exhale as leg extends. Gentlest ab exercise ${E.mdash} great starting point.`, yt:"heel slides postpartum diastasis recti" },
+            { name:"Pelvic Floor Holds", detail:`5${E.times}5s hold / 10s relax`, muscles:"Pelvic floor", yt:"pelvic floor exercises kegel proper form" },
+          ]}
+        ]},
+    ]
+  },
+  Fri: {
+    label:"Friday", tag:"LONG RUN", tagCls:"tag-emerald", emoji:"\uD83C\uDFC3\u200D\u2640\uFE0F",
+    summary:"Longest run of the week. Easy pace throughout.",
+    blocks:[
+      { id:"fri-run", type:"run", title:"Long Run (Easy)", duration:`30${E.dash}40 min`, color:"emerald", skippable:true,
+        notes:`Warm-up: walk 3 min + connection breathing.\nRun 25${E.dash}35 min easy. Walk breaks fine.\nExtend by 2${E.dash}3 min each week.\nSofter surfaces (trail, track, treadmill) easier on pelvic floor.`,
+        alternatives:[
+          { name:"Walk/Run Long", time:`35${E.dash}45 min`, desc:"Walk 2 min / jog 4 min. Longer duration, same easy effort." },
+          { name:"Easy Run (shorter)", time:`20${E.dash}25 min`, desc:"If the week was heavy, cut it down. No guilt." },
+        ]},
+      { id:"fri-core", type:"core", title:"Light Core/PF", duration:"5 min", color:"rose",
+        exercises:[
+          { id:"C", label:"Quick Post-Run", items:[
+            { name:"Glute Bridge + PF Squeeze", detail:`2${E.times}10`, muscles:"Glutes, PF", yt:"glute bridge pelvic floor activation" },
+            { name:"Diaphragmatic Breathing", detail:"2 min", muscles:"Recovery, PF", yt:"diaphragmatic breathing pelvic floor" },
+          ]}
+        ]},
+    ]
+  },
+  Sat: {
+    label:"Saturday", tag:"FULL BODY", tagCls:"tag-orange", emoji:"\uD83D\uDD25",
+    summary:"Full-body express circuit + core. Weekend-friendly format.",
+    blocks:[
+      { id:"sat-str", type:"strength", title:`Strength C ${E.mdash} Full Body Circuit`, duration:`25${E.dash}30 min`, color:"orange",
+        exercises:[
+          { id:"A", label:"Circuit (3 rounds, 45s work / 15s transition)", items:[
+            { name:"Goblet Squat or Sumo Squat", detail:`8${E.dash}12 reps`, muscles:"Quads, glutes", yt:"goblet squat dumbbell form" },
+            { name:"Push-ups (any variation)", detail:`8${E.dash}12 reps`, muscles:"Chest, shoulders, triceps", note:`Incline, knee, or full ${E.mdash} pick your level.`, yt:"push up variations beginner to advanced" },
+            { name:"DB Romanian Deadlift", detail:`8${E.dash}10 reps`, muscles:"Glutes, hamstrings", yt:"dumbbell romanian deadlift form women" },
+            { name:"DB Row (both sides)", detail:`8${E.dash}10/side`, muscles:"Back, lats", yt:"dumbbell bent over row form" },
+            { name:"Glute Bridge + PF Squeeze", detail:`10${E.dash}12 reps`, muscles:"Glutes, PF", yt:"glute bridge pelvic floor activation" },
+          ]},
+        ],
+        notes:`Rest 60${E.dash}90s between rounds. 3 rounds total.` },
+      { id:"sat-core", type:"core", title:"Core/PF Finisher", duration:`5${E.dash}10 min`, color:"rose",
+        exercises:[
+          { id:"C", label:"Finisher", items:[
+            { name:"Dead Bug", detail:`2${E.times}8/side`, muscles:"Deep core", yt:"dead bug exercise postpartum" },
+            { name:"Modified Side Plank (from knees)", detail:`2${E.times}15${E.dash}20s/side`, muscles:"Obliques", yt:"modified side plank from knees" },
+            { name:"Clamshell", detail:`2${E.times}12/side`, muscles:"Glute medius, PF support", yt:"clamshell exercise glute" },
+          ]}
+        ]},
+    ]
+  },
+  Sun: {
+    label:"Sunday", tag:"REST / YOGA", tagCls:"tag-pink", emoji:"\uD83E\uDDD8\u200D\u2640\uFE0F",
+    summary:"Recovery day. Yoga, mobility, or full rest.",
+    blocks:[
+      { id:"sun-yoga", type:"yoga", title:"Yoga / Mobility", duration:`30${E.dash}45 min`, color:"pink", skippable:true,
+        notes:`Option A: Yoga class/video (Vinyasa or Hatha). Avoid deep backbends and heavy twists that spike IAP. Cat-cow, warriors, pigeon, hip openers are ideal.\n\nOption B: Home flow (20${E.dash}30 min):\nCat-cow ${E.times}10 ${E.arrow} T-spine rotations 8/side ${E.arrow} Hip 90/90 60s/side ${E.arrow} Pigeon 60s/side ${E.arrow} Calf stretch 45s/side ${E.arrow} Child\u2019s pose 2 min ${E.arrow} Breathing 3 min.`,
+        alternatives:[
+          { name:"Full Rest", time:"0 min", desc:"If the week was heavy or sleep was poor, take the day completely off. No guilt." },
+          { name:"Gentle Walk", time:`15${E.dash}20 min`, desc:"Easy movement with the kids. Counts." },
+        ]},
+    ]
+  },
+};
+
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const typeIcons = { run:"\uD83C\uDFC3\u200D\u2640\uFE0F", strength:"\uD83D\uDCAA", core:"\uD83C\uDFAF", yoga:"\uD83E\uDDD8\u200D\u2640\uFE0F", other:"\uD83D\uDCCB" };
+
+function ExItem({ ex, deload }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="ex-item">
+      <div className="ex-row" onClick={() => setOpen(!open)}>
+        <div className="ex-main">
+          <span className="ex-name">{ex.name}</span>
+          <span className="ex-detail">{ex.detail}</span>
+          {deload && <span className="ex-deload">(~50%)</span>}
+        </div>
+        <a href={YT(ex.yt||ex.name)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="vid-btn">{E.play} Vid</a>
+      </div>
+      {open && <div className="ex-meta">
+        {ex.muscles && <div><b>Target:</b> {ex.muscles}</div>}
+        {ex.note && <div className="note">{ex.note}</div>}
+      </div>}
+    </div>
+  );
+}
+
+function BlockCard({ block, deload, missed, onToggleMiss }) {
+  const [open, setOpen] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+
+  return (
+    <div className={`block bl-${block.color} ${missed?"missed":""}`}>
+      <div className="block-header">
+        {block.skippable && (
+          <button onClick={() => onToggleMiss(block.id)} className={`miss-btn ${missed?"missed":""}`}>
+            {missed ? E.x : E.check}
+          </button>
+        )}
+        <div className="block-info" onClick={() => setOpen(!open)}>
+          <div className="block-title">
+            <span className="ico">{typeIcons[block.type]||"\uD83D\uDCCB"}</span>
+            <span className={`name ${missed?"struck":""}`}>{block.title}</span>
+          </div>
+          <div className="block-dur">{block.duration}{deload && block.type==="strength" ? " (deload ~50%)" : ""}</div>
+        </div>
+        {(block.exercises||block.notes||block.alternatives) &&
+          <span className="block-expand" onClick={()=>setOpen(!open)}>{open? E.triD : E.tri}</span>}
+      </div>
+
+      {missed && block.alternatives && block.alternatives.length > 0 && (
+        <div className="alts">
+          <div className="alts-title">{E.zap} Do instead:</div>
+          {block.alternatives.map((a,i) => (
+            <div key={i} className="alt-item">
+              <span className="alt-name">{a.name}</span>
+              <span className="alt-time">{a.time}</span>
+              <div className="alt-desc">{a.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && !missed && (
+        <div className="block-content">
+          {block.exercises ? (
+            <div>
+              {block.exercises.map(g => (
+                <div key={g.id} className="ex-group">
+                  <div className="ex-group-label">{g.label}</div>
+                  {g.items.map((ex,i) => <ExItem key={i} ex={ex} deload={deload} />)}
+                </div>
+              ))}
+            </div>
+          ) : block.notes ? (
+            <pre className="block-notes">{block.notes}</pre>
+          ) : null}
+          {block.notes && block.exercises && (
+            <div style={{marginTop:6}}>
+              <button onClick={()=>setShowNotes(!showNotes)} className="notes-btn">
+                {showNotes ? `${E.triD} Hide notes` : `${E.tri} Notes`}
+              </button>
+              {showNotes && <pre className="block-notes" style={{background:"#f3f4f6",padding:8,borderRadius:6,marginTop:4}}>{block.notes}</pre>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GuardrailsPanel() {
+  return (
+    <div className="panel-content guard">
+      <div className="section-title">Diastasis Recti & Pelvic Floor</div>
+      <div>{E.bullet} <b>Stop if:</b> leaking, pelvic heaviness/pressure, or visible midline doming during any exercise</div>
+      <div>{E.bullet} <b>No:</b> crunches, sit-ups, V-ups, full planks (until cleared). Dead bugs + bird dogs + Pallof press instead</div>
+      <div>{E.bullet} <b>Breathing:</b> exhale on effort, gently engage PF. Never hold breath or bear down</div>
+      <div className="section-title mt">General</div>
+      <div>{E.bullet} <b>Running:</b> walk breaks are training, not failure. Softer surfaces help PF</div>
+      <div>{E.bullet} <b>Sleep &lt;6 hrs:</b> drop tempo run to easy, reduce strength by 1 set/exercise</div>
+      <div>{E.bullet} <b>Deload wk 4:</b> ~50% strength volume, all runs easy, core/PF stays full (it's rehab)</div>
+      <div>{E.bullet} <b>Consistency &gt; intensity:</b> 10 min minimum on the worst day beats skipping entirely</div>
+    </div>
+  );
+}
+
+function BusyDayPanel() {
+  return (
+    <div className="panel-content busy">
+      <div className="section-title">{E.zap} Busy-Day Minimum (10{E.dash}15 min)</div>
+      <div>{E.bullet} Connection breathing {E.mdash} 10 breaths</div>
+      <div>{E.bullet} Glute bridge + PF squeeze {E.mdash} 2{E.times}10</div>
+      <div>{E.bullet} Dead bug {E.mdash} 2{E.times}6/side</div>
+      <div>{E.bullet} Push-ups (any level) {E.mdash} 2{E.times}max{E.dash}2</div>
+      <div>{E.bullet} Goblet/BW squat {E.mdash} 2{E.times}10</div>
+      <div>{E.bullet} Bird dog {E.mdash} 2{E.times}6/side</div>
+      <div style={{fontSize:10,marginTop:6,fontStyle:"italic"}}>Keeps core/PF rehab moving even when everything else gives.</div>
+    </div>
+  );
+}
+
+function ProgressionPanel() {
+  const [phase, setPhase] = useState(0);
+  const phases = [
+    { label:"Wks 1\u20134: Foundation", cls:"on-0", badge:"tag-teal", items:[
+      "Learn exercises, nail the breathing pattern",
+      `All runs easy ${E.mdash} walk/run intervals are fine`,
+      "Lighter weights, focus on exhale-on-effort",
+      "Core/PF blocks every session (non-negotiable)",
+    ]},
+    { label:"Wks 5\u20138: Build", cls:"on-1", badge:"tag-blue", items:[
+      "Add weight when all sets hit top of rep range",
+      `Long run +2${E.dash}3 min/week`,
+      "Core: progress to full side plank, add Pallof press",
+      "Tempo runs can push slightly harder if PF OK",
+    ]},
+    { label:"Wks 9\u201312: Consolidate", cls:"on-2", badge:"tag-purple", items:[
+      "Strength loads noticeably heavier than week 1",
+      `Long run approaching 35${E.dash}40 min`,
+      `Core: bird dog 3${E.dash}5s holds, slow mountain climbers if no doming`,
+      "Consider 4th run day if running goals are priority",
+    ]},
+  ];
+  const p = phases[phase];
+  return (
+    <div style={{marginBottom:12}}>
+      <div className="prog-tabs">
+        {phases.map((ph,i) => (
+          <button key={i} onClick={()=>setPhase(i)} className={`prog-tab ${phase===i ? ph.cls : "off"}`}>
+            {ph.label.split(":")[0]}
+          </button>
+        ))}
+      </div>
+      <div className="prog-body">
+        <div className={`prog-badge ${p.badge}`}>{p.label}</div>
+        <div>
+          {p.items.map((item,i) => (
+            <div key={i} style={{fontSize:11,color:"#374151",marginBottom:4}}>{E.bullet} {item}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const todayIdx = new Date().getDay();
+  const todayKey = DAYS[todayIdx === 0 ? 6 : todayIdx - 1];
+  const [sel, setSel] = useState(todayKey);
+  const [week, setWeek] = useState(1);
+  const [missed, setMissed] = useState({});
+  const [showGuard, setShowGuard] = useState(false);
+  const [showBusy, setShowBusy] = useState(false);
+  const [showProg, setShowProg] = useState(false);
+
+  const toggleMiss = useCallback((id) => {
+    setMissed(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const day = DAYS_DATA[sel];
+  const missedToday = day.blocks.filter(b => missed[b.id]).length;
+  const isDeload = week === 4;
+
+  return (
+    <div className="app">
+      <div style={{textAlign:"center",marginBottom:12}}>
+        <h1 style={{fontSize:18,fontWeight:700}}>Training Companion</h1>
+        <p style={{fontSize:10,color:"#9ca3af"}}>Postpartum-Informed Strength, Running & Recovery</p>
+        <p style={{fontSize:10,color:"#9ca3af"}}>Tap day {E.arrow} expand blocks {E.arrow} tap exercises for video</p>
+      </div>
+
+      {/* Week phase */}
+      <div className="week-bar">
+        <div className="week-info">
+          <span className="week-badge" style={{background: isDeload ? "#fde68a" : "var(--teal-bg)", color: isDeload ? "#92400e" : "var(--teal)"}}>
+            {isDeload ? `Week 4 ${E.mdash} Deload` : `Week ${week}/4 ${E.mdash} Build`}
+          </span>
+          <div className="week-sub">
+            {isDeload ? `~50% strength volume. All runs easy. Core/PF stays full.` : `+1 rep/session ${E.arrow} top of range ${E.arrow} add load, reset reps.`}
+          </div>
+        </div>
+        <div className="wk-btns">
+          {[1,2,3,4].map(w => (
+            <button key={w} onClick={() => setWeek(w)} className={`wk-btn ${week===w ? (w===4?"on deload":"on") : "off"}`}>{w}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Day selector */}
+      <div className="day-bar">
+        {DAYS.map(d => {
+          const dd = DAYS_DATA[d];
+          const isToday = d === todayKey;
+          const isSel = d === sel;
+          const dayMissed = dd.blocks.some(b => missed[b.id]);
+          return (
+            <button key={d} onClick={() => setSel(d)} className={`day-btn ${isSel?"sel":""} ${isToday && !isSel?"today":""}`}>
+              <div className="lbl">{d}</div>
+              <div className="ico">{dd.emoji}</div>
+              {dayMissed && <div className="dot" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Panels */}
+      <button onClick={() => { setShowGuard(!showGuard); setShowBusy(false); setShowProg(false); }} className="panel-btn guard">
+        {showGuard ? E.triD : E.tri} Guardrails & Safety
+      </button>
+      {showGuard && <GuardrailsPanel />}
+
+      <button onClick={() => { setShowBusy(!showBusy); setShowGuard(false); setShowProg(false); }} className="panel-btn busy">
+        {showBusy ? E.triD : E.tri} Busy-Day Minimum (10{E.dash}15 min)
+      </button>
+      {showBusy && <BusyDayPanel />}
+
+      <button onClick={() => { setShowProg(!showProg); setShowGuard(false); setShowBusy(false); }} className="panel-btn prog">
+        {showProg ? E.triD : E.tri} Progression Plan (12 Weeks)
+      </button>
+      {showProg && <ProgressionPanel />}
+
+      {/* Day content */}
+      <div className="day-card">
+        <div className="day-header">
+          <span className="emoji">{day.emoji}</span>
+          <h2>{day.label}</h2>
+          <span className={`day-tag ${day.tagCls}`}>{day.tag}</span>
+        </div>
+        <p className="day-summary">{day.summary}</p>
+
+        {missedToday > 0 && (
+          <div className="missed-banner">
+            {E.zap} {missedToday} block{missedToday>1?"s":""} missed {E.mdash} alternatives shown. Tap {E.x} to undo.
+          </div>
+        )}
+
+        <div>
+          {day.blocks.map(block => (
+            <BlockCard key={block.id} block={block} deload={isDeload}
+              missed={!!missed[block.id]} onToggleMiss={toggleMiss} />
+          ))}
+        </div>
+
+        {day.blocks.some(b => b.skippable) && !missedToday && (
+          <div className="hint">Tap the circle to mark a block as missed {E.arrow} alternatives appear</div>
+        )}
+      </div>
+
+      {/* PF reminder */}
+      <div className="pf-reminder">
+        <div className="main">{E.bullet} Connection Breathing: 10 breaths at the start of every session</div>
+        <div className="sub">Inhale: belly + ribs expand, PF relaxes {E.arrow} Exhale: PF lifts, navel draws in</div>
+      </div>
+
+      {/* Footer */}
+      <div className="footer">
+        <div>Tempo: 3-0-1 = 3s down, 0 pause, 1s up {E.bullet} Rest 45{E.dash}60s between sets</div>
+        <div>Mon/Wed/Fri = Run {E.bullet} Tue/Thu/Sat = Strength {E.bullet} Sun = Yoga/Rest</div>
+        <div>Core/PF block every day {E.bullet} Deload week 4 {E.bullet} See a pelvic floor PT if possible</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

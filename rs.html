@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Training">
+<title>Training Companion</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.9/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9fafb;color:#111;-webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;padding:12px 12px 80px}
+.header{text-align:center;margin-bottom:12px}
+.header h1{font-size:18px;font-weight:700;color:#111}
+.header p{font-size:10px;color:#9ca3af}
+/* Week bar */
+.week-bar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-bottom:10px}
+.week-info{flex:1}
+.week-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
+.week-badge.build{background:#dbeafe;color:#1e40af}
+.week-badge.deload{background:#fef3c7;color:#92400e}
+.week-note{font-size:10px;color:#6b7280;margin-top:3px}
+.week-btns{display:flex;gap:4px}
+.week-btn{width:28px;height:28px;border-radius:50%;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.week-btn.off{background:#f3f4f6;color:#6b7280}
+.week-btn.on{background:#3b82f6;color:#fff}
+.week-btn.deload-on{background:#f59e0b;color:#fff}
+/* Day selector */
+.days{display:flex;gap:4px;margin-bottom:10px}
+.day-btn{flex:1;border:none;border-radius:8px;padding:8px 2px;text-align:center;cursor:pointer;transition:all .15s;position:relative;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.day-btn.sel{background:#111;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.day-btn.today:not(.sel){box-shadow:0 0 0 2px #60a5fa}
+.day-btn .dl{font-size:11px;font-weight:700}
+.day-btn .dt{font-size:7px;margin-top:2px;opacity:.6}
+.day-btn .miss-dot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:#f59e0b;border-radius:50%}
+/* Guardrails */
+.guard-btn{width:100%;text-align:left;font-size:12px;padding:8px 12px;margin-bottom:10px;border-radius:8px;background:#fef2f2;color:#b91c1c;border:none;cursor:pointer;font-weight:500}
+.guard-box{margin-bottom:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:11px;color:#991b1b;line-height:1.6}
+/* Day card */
+.day-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.day-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.day-head .emoji{font-size:20px}
+.day-head h2{font-size:18px;font-weight:700}
+.day-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px}
+.day-sum{font-size:12px;color:#6b7280;margin-bottom:12px}
+.missed-banner{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-weight:500}
+/* Block card */
+.block{border-left:4px solid #d1d5db;border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;transition:opacity .15s}
+.block.missed{opacity:.45}
+.block-head{display:flex;align-items:center;gap:8px}
+.miss-btn{width:24px;height:24px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;background:transparent;color:#d1d5db;flex-shrink:0;transition:all .15s}
+.miss-btn.on{background:#fee2e2;border-color:#f87171;color:#dc2626}
+.block-main{flex:1;cursor:pointer}
+.block-title{display:flex;align-items:center;gap:6px}
+.block-title .icon{font-size:14px}
+.block-title .name{font-size:13px;font-weight:600;color:#111}
+.block-title .name.struck{text-decoration:line-through;color:#9ca3af}
+.block-dur{font-size:11px;color:#6b7280;margin-left:22px}
+.block-expand{font-size:11px;color:#9ca3af;cursor:pointer;flex-shrink:0}
+/* Alternatives */
+.alt-box{margin:8px 0 0 32px;background:rgba(251,191,36,.15);border:1px solid #fcd34d;border-radius:8px;padding:10px}
+.alt-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px}
+.alt-item{margin-bottom:6px}
+.alt-item:last-child{margin-bottom:0}
+.alt-name{font-size:11px;font-weight:600;color:#78350f}
+.alt-time{font-size:9px;background:#fde68a;color:#92400e;padding:1px 6px;border-radius:4px;margin-left:4px}
+.alt-desc{font-size:10px;color:#92400e;margin-top:2px}
+/* Detail content */
+.block-detail{margin:8px 0 0 24px}
+.block-notes{font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.5}
+.group-label{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;margin-bottom:4px}
+.ex-item{border-left:2px solid #e5e7eb;padding:4px 0 4px 10px;margin-bottom:2px}
+.ex-head{display:flex;align-items:flex-start;gap:6px;cursor:pointer}
+.ex-name{font-size:12px;font-weight:500;color:#111}
+.ex-detail{font-size:11px;color:#6b7280;margin-left:4px}
+.ex-deload{font-size:10px;color:#d97706;margin-left:4px}
+.vid-btn{flex-shrink:0;font-size:9px;background:#fef2f2;color:#dc2626;padding:2px 6px;border-radius:4px;text-decoration:none;border:none;cursor:pointer}
+.vid-btn:hover{background:#fee2e2}
+.ex-expand{font-size:11px;color:#6b7280;margin-top:3px}
+.ex-expand b{color:#4b5563}
+.ex-expand em{font-style:italic}
+.emom-btn{font-size:11px;color:#4f46e5;font-weight:500;background:none;border:none;cursor:pointer;margin-top:8px;padding:0}
+.emom-box{margin-top:4px;font-size:11px;color:#4b5563;background:#eef2ff;padding:8px;border-radius:6px;white-space:pre-wrap}
+/* Footer */
+.footer{margin-top:16px;text-align:center;font-size:9px;color:#9ca3af;line-height:1.6}
+.hint{margin-top:12px;text-align:center;font-size:10px;color:#9ca3af}
+/* Color classes for block borders */
+.bc-amber{border-color:#fbbf24;background:#fffbeb}
+.bc-sky{border-color:#7dd3fc;background:#f0f9ff}
+.bc-blue{border-color:#60a5fa;background:#eff6ff}
+.bc-orange{border-color:#fb923c;background:#fff7ed}
+.bc-purple{border-color:#a78bfa;background:#f5f3ff}
+.bc-red{border-color:#f87171;background:#fef2f2}
+.bc-pink{border-color:#f472b6;background:#fdf2f8}
+.bc-emerald{border-color:#34d399;background:#ecfdf5}
+.bc-violet{border-color:#c4b5fd;background:#f5f3ff}
+.bc-slate{border-color:#94a3b8;background:#f8fafc}
+.bc-indigo{border-color:#818cf8;background:#eef2ff}
+/* Tag colors */
+.tc-emerald{background:#d1fae5;color:#065f46}
+.tc-blue{background:#dbeafe;color:#1e40af}
+.tc-orange{background:#ffedd5;color:#9a3412}
+.tc-purple{background:#ede9fe;color:#5b21b6}
+.tc-amber{background:#fef3c7;color:#92400e}
+.tc-red{background:#fee2e2;color:#991b1b}
+.tc-pink{background:#fce7f3;color:#9d174d}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const YT = (q) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q + " form tutorial")}`;
+
+const DAYS_DATA = {
+  Mon: {
+    label: "Monday", tag: "REST + HIIT", tagCls: "tc-emerald", emoji: "\uD83D\uDD04",
+    summary: "Strength rest day. Bike HIIT commute + easy swim.",
+    blocks: [
+      { id: "mon-bike", type: "bike", title: "Bike HIIT (Commute)", duration: "60 min", color: "amber", skippable: true,
+        notes: "Warm-up 10 min Z1\u2013Z2 + 3\u00d720s spin-ups (110\u2013120 rpm)/40s easy.\nMain: 6\u201310\u00d72 min hard @ 100\u2013110 rpm / 2 min easy\nOR 3\u20134 rounds of (3 min @100 \u2192 2 min @105 \u2192 1 min @110) with 3\u20134 min easy between.\nCool-down 5\u201310 min.\nHR: finish reps ~85\u201390% peak; recover to ~65\u201370%.",
+        alternatives: [
+          { name: "Shadow-Boxing HIIT", time: "15\u201318 min", desc: "8\u201312\u00d71:00 on / 1:00 easy. Small shuffles, no deep pivots. 3\u00d710s flurries per work minute." },
+          { name: "DB No-Squat Complex", time: "15\u201318 min", desc: "6 rounds \u00d7 40s work / 20s rest: RDL \u2192 Push Press \u2192 Row \u2192 Suitcase Hold." },
+          { name: "Deep-Water Run HIIT", time: "20 min", desc: "10\u00d71:00 hard / 1:00 easy (buoyancy belt)." },
+        ]},
+      { id: "mon-swim", type: "swim", title: "Swim (Easy)", duration: "30 min", color: "sky", skippable: true,
+        notes: "Easy technique / drills. RPE \u22644\u20135. Freestyle or backstroke only.",
+        alternatives: [
+          { name: "Boxing Flow (easy)", time: "15\u201320 min", desc: "3\u20135\u00d73 min easy combos + 1 min brisk walk." },
+          { name: "Core/Mobility", time: "10\u201315 min", desc: "Dead bug, side plank, calf raises, hip flexor openers." },
+        ]},
+      { id: "mon-rest", type: "rest", title: "Strength", duration: "REST", color: "emerald",
+        notes: "No lifting. Recovery from weekend P90X." }
+    ]
+  },
+  Tue: {
+    label: "Tuesday", tag: "PULL DAY", tagCls: "tc-blue", emoji: "\uD83D\uDCAA",
+    summary: "Pull-up bar focus + biceps + core. PT full day.",
+    blocks: [
+      { id: "tue-swim", type: "swim", title: "Swim (Easy)", duration: "40 min", color: "sky", skippable: true,
+        notes: "Technique + drills. Optional 8\u201312 min deep-water running.",
+        alternatives: [
+          { name: "Boxing Flow", time: "15\u201320 min", desc: "3\u20135\u00d73 min easy + 1 min walk." },
+          { name: "12-min EMOM", time: "12 min", desc: "Push-ups 8\u201312 \u2192 1-arm DB Row 10/side \u2192 Glute Bridge 12\u201315." },
+        ]},
+      { id: "tue-str", type: "strength", title: "Pull A \u2014 Vertical Pull / Lats / Biceps / Core", duration: "25 min", color: "blue",
+        exercises: [
+          { id: "A", label: "Block A (3 series, superset)", items: [
+            { name: "Pull-ups or Chin-ups", detail: "3\u00d74\u20138 @ 2-0-1", muscles: "Lats, biceps, scapular depressors", note: "Band-assisted or eccentric 3\u20135s down. Neutral grip option.", yt: "pull ups proper form" },
+            { name: "DB Pullover (lat bias)", detail: "3\u00d78\u201312 @ 2-0-1", muscles: "Lats, serratus", note: "Ribs DOWN. Shorten ROM if low back arches.", yt: "dumbbell pullover lat bias" },
+          ]},
+          { id: "B", label: "Block B (2 series)", items: [
+            { name: "Scap Pull-ups", detail: "2\u00d76\u201310", muscles: "Scapular control", note: "Hang, depress, hold 1s, release. No arm bend.", yt: "scapular pull ups" },
+            { name: "Incline DB Curl", detail: "2\u00d78\u201312 @ 2-0-1", muscles: "Biceps", yt: "incline dumbbell curl" },
+            { name: "Hammer Curl", detail: "1\u20132\u00d710\u201312", muscles: "Brachialis, forearms", note: "Or BB/EZ curl.", yt: "hammer curl form" },
+          ]},
+          { id: "C", label: "Core Block (5\u20138 min)", items: [
+            { name: "Dead Bug (slow)", detail: "2\u20133\u00d76\u201310/side", muscles: "Anterior core", yt: "dead bug exercise" },
+            { name: "DB/KB Suitcase Carry/Hold", detail: "2\u00d720\u201340m or 20\u201330s/side", muscles: "Anti-rotation", yt: "suitcase carry exercise" },
+          ]},
+        ],
+        emom: "8\u201312 min EMOM (3-min cycle):\nMin 1 \u2014 Pull-ups AMRAP-2 (or eccentric \u00d73\u20135)\nMin 2 \u2014 DB Pullover 8\u201310\nMin 3 \u2014 DB Curl 8\u201312 (alt incline/hammer)" },
+      { id: "tue-pt", type: "pt", title: "PT (Sword Thrive)", duration: "20 min full", color: "violet",
+        notes: "Full prescription. Pain \u22643\u20134/10, no swelling >24\u201348h." },
+    ]
+  },
+  Wed: {
+    label: "Wednesday", tag: "PUSH DAY", tagCls: "tc-orange", emoji: "\uD83D\uDCAA",
+    summary: "Push strength priority. Bike Z2 commute (not HIIT).",
+    blocks: [
+      { id: "wed-bike", type: "bike", title: "Bike Z2 (Commute)", duration: "60 min", color: "slate", skippable: true,
+        notes: "Easy. 90\u201395 rpm, light gear. NOT HIIT \u2014 strength is the priority.",
+        alternatives: [
+          { name: "Easy swim", time: "20\u201330 min", desc: "Technique drills, RPE \u22644." },
+          { name: "Brisk walk", time: "20\u201330 min", desc: "Keep it moving." },
+        ]},
+      { id: "wed-swim", type: "swim", title: "Swim (Easy)", duration: "30 min", color: "sky", skippable: true,
+        notes: "Technique / drills. Light.",
+        alternatives: [
+          { name: "Boxing Flow", time: "15 min", desc: "Easy combos. No pivots." },
+          { name: "Core/Mobility", time: "10 min", desc: "Dead bug, planks, stretches." },
+        ]},
+      { id: "wed-str", type: "strength", title: "Push A \u2014 Chest / Shoulders / Triceps + Rear-delt", duration: "25 min", color: "orange",
+        exercises: [
+          { id: "A", label: "Block A (3 series, superset)", items: [
+            { name: "DB/BB Floor Press or Push-ups", detail: "3\u00d76\u201312 @ 2-0-1", muscles: "Pecs, anterior delts, triceps", note: "Feet-elevated (harder), hands-elevated (easier), or tempo push-ups (3s down).", yt: "dumbbell floor press form" },
+            { name: "DB Rear-Delt Raise", detail: "3\u00d712\u201315 @ 2-1-2", muscles: "Rear delts, mid/lower traps", note: "No shrug/swing. Incline face pull as variation.", yt: "rear delt raise form" },
+          ]},
+          { id: "B", label: "Block B (2\u20133 series, superset)", items: [
+            { name: "Seated DB Shoulder Press (neutral)", detail: "2\u20133\u00d76\u201310 @ 2-0-1", muscles: "Delts, triceps", note: "Ribs down. Half-kneeling 1-arm as alt.", yt: "seated dumbbell shoulder press neutral grip" },
+            { name: "Side-lying DB External Rotation", detail: "2\u00d712\u201315/side @ 2-1-2", muscles: "Rotator cuff", yt: "side lying external rotation dumbbell" },
+          ]},
+          { id: "opt", label: "Optional (if time)", items: [
+            { name: "DB Triceps Extension", detail: "2\u00d78\u201312 @ 2-0-1", muscles: "Triceps", yt: "lying dumbbell triceps extension" },
+          ]},
+        ],
+        emom: "6\u20139 min EMOM (alternate):\nMin 1 \u2014 Push-ups 8\u201312\nMin 2 \u2014 DB Rear-Delt Raise 12\u201315 strict" },
+    ]
+  },
+  Thu: {
+    label: "Thursday", tag: "POSTERIOR", tagCls: "tc-purple", emoji: "\uD83D\uDCAA",
+    summary: "Hinge lower body + light rows + core. PT full day.",
+    blocks: [
+      { id: "thu-swim", type: "swim", title: "Swim (Easy)", duration: "40 min", color: "sky", skippable: true,
+        notes: "Technique + drills. Freestyle/backstroke.",
+        alternatives: [
+          { name: "Boxing Flow", time: "15\u201320 min", desc: "Easy combos + walk." },
+          { name: "Core/Mobility", time: "10\u201315 min", desc: "Planks, dead bugs, stretches." },
+        ]},
+      { id: "thu-str", type: "strength", title: "Posterior Chain + Light Pull + Core", duration: "25 min", color: "purple",
+        exercises: [
+          { id: "A", label: "Block A (3 series, superset)", items: [
+            { name: "DB/BB Romanian Deadlift", detail: "2\u20133\u00d76\u201310 @ 3-1-1", muscles: "Glutes, hamstrings", note: "HINGE not squat. Soft knees, hips back. KB kickstand RDL if 1 bell.", yt: "romanian deadlift dumbbell form" },
+            { name: "1-Arm DB/KB Row (bench-supported)", detail: "2\u20133\u00d78\u201312/side @ 2-1-1", muscles: "Lats, mid-back", note: "KB gorilla row or light BB row as alt.", yt: "one arm dumbbell row bench supported" },
+          ]},
+          { id: "B", label: "Block B (2\u20133 series, superset)", items: [
+            { name: "Hip Thrust (BB) or DB Floor Bridge", detail: "2\u20133\u00d78\u201312 @ 2-2-1", muscles: "Glutes", note: "Shins vertical. 2s squeeze. Single-leg for progression.", yt: "barbell hip thrust form" },
+            { name: "Standing DB Calf Raise", detail: "2\u00d712\u201315 @ 2-1-1", muscles: "Calves", note: "Off a step for more ROM.", yt: "standing dumbbell calf raise" },
+          ]},
+          { id: "F", label: "Finisher + Core (~5 min)", items: [
+            { name: "KB Suitcase Carry/Hold", detail: "2\u00d720\u201340m or 20\u201330s/side", muscles: "Anti-rotation", yt: "kettlebell suitcase carry" },
+            { name: "Side Plank", detail: "2\u00d720\u201330s/side", muscles: "Obliques", yt: "side plank proper form" },
+            { name: "Hollow Hold or Dead Bug", detail: "2\u00d720\u201330s", muscles: "Anterior core", note: "Pick whichever you didn't do Tue.", yt: "hollow body hold" },
+          ]},
+        ],
+        emom: "9 min EMOM (3-min cycle):\nMin 1 \u2014 KB/DB RDL 8 (3s down)\nMin 2 \u2014 Hip Thrust/Bridge 12 (2s squeeze)\nMin 3 \u2014 Suitcase march 40s (switch at 20s)" },
+      { id: "thu-pt", type: "pt", title: "PT (Sword Thrive)", duration: "20 min full", color: "violet",
+        notes: "Full prescription. Pain \u22643\u20134/10, no swelling >24\u201348h." },
+      { id: "thu-box", type: "other", title: "Boxing (optional)", duration: "10 min", color: "slate", skippable: true,
+        notes: "Light shadow boxing. Small shuffles, no deep pivots.",
+        alternatives: [{ name: "Skip it", time: "0 min", desc: "No replacement needed." }] },
+    ]
+  },
+  Fri: {
+    label: "Friday", tag: "SWIM HIIT", tagCls: "tc-amber", emoji: "\uD83C\uDFCA",
+    summary: "Swim HIIT \u2014 key pool session. No strength.",
+    blocks: [
+      { id: "fri-swim", type: "swim", title: "Swim HIIT (50m pool)", duration: "60 min", color: "amber", skippable: true,
+        notes: "Warm-up 300\u2013400 easy.\nMain: 2\u00d7(6\u00d750 as 25 fast / 25 easy) on 1:30\u20131:40 with 100 easy between\nOR 6\u201310\u00d750 fast on 1:45\u20132:00 (\u226515\u201330s rest).\nCool-down 200 easy.\nFreestyle/backstroke only.",
+        alternatives: [
+          { name: "Shadow-Boxing HIIT", time: "15\u201318 min", desc: "8\u201312\u00d71:00 on / 1:00 easy. No deep pivots." },
+          { name: "DB No-Squat Complex", time: "15\u201318 min", desc: "6 rounds \u00d7 40s work / 20s rest." },
+          { name: "Deep-Water Run", time: "20 min", desc: "10\u00d71:00 hard / 1:00 easy." },
+        ]},
+      { id: "fri-pt", type: "pt", title: "PT (light)", duration: "10 min", color: "violet",
+        notes: "TKE + Spanish squat hold + bridges." },
+    ]
+  },
+  Sat: {
+    label: "Saturday", tag: "P90X C&B", tagCls: "tc-red", emoji: "\uD83D\uDD25",
+    summary: "P90X Chest & Back (modified) + easy swim + core.",
+    blocks: [
+      { id: "sat-swim", type: "swim", title: "Swim (Easy)", duration: "30 min", color: "sky", skippable: true,
+        notes: "Warm-up / flush. Before P90X or separate by \u22654\u20136h.",
+        alternatives: [{ name: "Brisk walk", time: "15\u201320 min", desc: "Easy movement." }] },
+      { id: "sat-str", type: "strength", title: "P90X Chest & Back (Modified)", duration: "45\u201360 min", color: "red",
+        notes: "Pull-up bar for ALL back: wide, close, reverse-grip, switch-grip. Band-assist as needed.\nPush-ups: standard, wide, military, decline.\n1\u20132 RIR every set. Skip diamond if wrists hurt.\nIf Fri was brutal \u2192 60\u201370% volume." },
+      { id: "sat-core", type: "core", title: "Core Support", duration: "10 min", color: "indigo",
+        exercises: [
+          { id: "C", label: "Choose 2\u20133", items: [
+            { name: "Hollow Hold", detail: "3\u00d720\u201330s", muscles: "Anterior core", yt: "hollow body hold" },
+            { name: "Side Plank", detail: "2\u00d720\u201330s/side", muscles: "Obliques", yt: "side plank proper form" },
+            { name: "DB External Rotation", detail: "2\u00d712\u201315/side", muscles: "Rotator cuff", yt: "dumbbell external rotation" },
+          ]}
+        ],
+        emom: "If skipping P90X:\n10\u201312 min EMOM: Push-ups 8\u201312 / Pull-ups AMRAP-2 (alternate)" },
+      { id: "sat-pt", type: "pt", title: "PT (light)", duration: "10 min", color: "violet", notes: "Light dose." },
+    ]
+  },
+  Sun: {
+    label: "Sunday", tag: "P90X BTS", tagCls: "tc-pink", emoji: "\uD83D\uDD25",
+    summary: "P90X Biceps/Triceps/Shoulders + yoga. Skip P90X if recovery poor.",
+    blocks: [
+      { id: "sun-str", type: "strength", title: "P90X Biceps/Triceps/Shoulders", duration: "30\u201345 min", color: "pink",
+        notes: "Biceps: curls, hammer, concentration (DB)\nTriceps: overhead ext, kickbacks, lying ext (DB)\nShoulders: seated press, lateral raises, rear-delt raises, light upright rows\n\n1\u20132 RIR. If WHOOP poor \u2192 skip, do yoga only." },
+      { id: "sun-yoga", type: "other", title: "Yoga / Mobility", duration: "30\u201360 min", color: "emerald",
+        notes: "T-spine openers, wall slides, shoulder CARs.\nHip flexor/quad, calf/ankle rocks.\nHamstring flossing, diaphragmatic breathing." },
+      { id: "sun-pt", type: "pt", title: "PT (light)", duration: "10 min", color: "violet", notes: "If desired." },
+    ]
+  },
+};
+
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const ICONS = { swim:"\uD83C\uDFCA", bike:"\uD83D\uDEB4", strength:"\uD83D\uDCAA", pt:"\uD83E\uDDB5", core:"\uD83C\uDFAF", rest:"\uD83D\uDE34", other:"\uD83D\uDCCB" };
+
+function ExItem({ ex, deload }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="ex-item">
+      <div className="ex-head" onClick={() => setOpen(!open)}>
+        <div style={{flex:1}}>
+          <span className="ex-name">{ex.name}</span>
+          <span className="ex-detail">{ex.detail}</span>
+          {deload && <span className="ex-deload">(~50%)</span>}
+        </div>
+        <a href={YT(ex.yt||ex.name)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="vid-btn">{"\u25B6"} Vid</a>
+      </div>
+      {open && <div className="ex-expand">
+        {ex.muscles && <div><b>Target:</b> {ex.muscles}</div>}
+        {ex.note && <div><em>{ex.note}</em></div>}
+      </div>}
+    </div>
+  );
+}
+
+function BlockCard({ block, deload, missed, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const [showEmom, setShowEmom] = useState(false);
+
+  return (
+    <div className={`block bc-${block.color} ${missed?"missed":""}`}>
+      <div className="block-head">
+        {block.skippable && (
+          <button className={`miss-btn ${missed?"on":""}`} onClick={()=>onToggle(block.id)}>
+            {missed ? "\u2715" : "\u2713"}
+          </button>
+        )}
+        <div className="block-main" onClick={()=>setOpen(!open)}>
+          <div className="block-title">
+            <span className="icon">{ICONS[block.type]||"\uD83D\uDCCB"}</span>
+            <span className={`name ${missed?"struck":""}`}>{block.title}</span>
+          </div>
+          <div className="block-dur">{block.duration}{deload && block.type==="strength" ? " (deload ~50%)" : ""}</div>
+        </div>
+        {(block.exercises||block.notes||block.alternatives) &&
+          <span className="block-expand" onClick={()=>setOpen(!open)}>{open?"\u25BE":"\u25B8"}</span>}
+      </div>
+
+      {missed && block.alternatives && block.alternatives.length > 0 && (
+        <div className="alt-box">
+          <div className="alt-title">{"\u26A1"} Do instead:</div>
+          {block.alternatives.map((a,i) => (
+            <div key={i} className="alt-item">
+              <span className="alt-name">{a.name}</span>
+              <span className="alt-time">{a.time}</span>
+              <div className="alt-desc">{a.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && !missed && (
+        <div className="block-detail">
+          {block.exercises ? (
+            <div>
+              {block.exercises.map(g => (
+                <div key={g.id}>
+                  <div className="group-label">{g.label}</div>
+                  {g.items.map((ex,i) => <ExItem key={i} ex={ex} deload={deload} />)}
+                </div>
+              ))}
+              {block.emom && <div>
+                <button className="emom-btn" onClick={()=>setShowEmom(!showEmom)}>
+                  {showEmom ? "\u25BE Hide EMOM" : "\u25B8 EMOM alternative"}
+                </button>
+                {showEmom && <pre className="emom-box">{block.emom}</pre>}
+              </div>}
+            </div>
+          ) : block.notes ? (
+            <pre className="block-notes">{block.notes}</pre>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const todayIdx = new Date().getDay();
+  const todayKey = DAYS[todayIdx === 0 ? 6 : todayIdx - 1];
+  const [sel, setSel] = useState(todayKey);
+  const [week, setWeek] = useState(1);
+  const [missed, setMissed] = useState({});
+  const [showGuard, setShowGuard] = useState(false);
+
+  const toggle = useCallback((id) => setMissed(p => ({...p, [id]: !p[id]})), []);
+
+  const day = DAYS_DATA[sel];
+  const mc = day.blocks.filter(b => missed[b.id]).length;
+  const dl = week === 4;
+
+  return (
+    <div className="app">
+      <div className="header">
+        <h1>Training Companion</h1>
+        <p>Tap day {"\u2192"} expand blocks {"\u2192"} tap exercises for video {"\u2022"} Mark missed {"\u2192"} see alternatives</p>
+      </div>
+
+      <div className="week-bar">
+        <div className="week-info">
+          <span className={`week-badge ${dl?"deload":"build"}`}>
+            {dl ? "Week 4 \u2014 Deload" : `Week ${week}/4 \u2014 Build`}
+          </span>
+          <div className="week-note">
+            {dl ? "~50% sets/reps. Halve HIIT intervals." : "+1 rep per session \u2192 top of range \u2192 add load."}
+          </div>
+        </div>
+        <div className="week-btns">
+          {[1,2,3,4].map(w => (
+            <button key={w} onClick={()=>setWeek(w)}
+              className={`week-btn ${week===w ? (w===4?"deload-on":"on") : "off"}`}>{w}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="days">
+        {DAYS.map(d => {
+          const dd = DAYS_DATA[d];
+          const hasMiss = dd.blocks.some(b => missed[b.id]);
+          return (
+            <button key={d} onClick={()=>setSel(d)}
+              className={`day-btn ${d===sel?"sel":""} ${d===todayKey&&d!==sel?"today":""}`}>
+              <div className="dl">{d}</div>
+              <div className="dt">{dd.emoji} {dd.tag.replace("P90X ","").replace("REST + ","")}</div>
+              {hasMiss && <div className="miss-dot"/>}
+            </button>
+          );
+        })}
+      </div>
+
+      <button className="guard-btn" onClick={()=>setShowGuard(!showGuard)}>
+        {showGuard ? "\u25BE" : "\u25B8"} Guardrails & Safety
+      </button>
+      {showGuard && (
+        <div className="guard-box">
+          {"\u2022"} Max 2 HIIT/week (Mon bike, Fri swim)<br/>
+          {"\u2022"} Knees: cadence 100{"\u2013"}110 rpm, no grinding. Stop if pain &gt;4/10 or swelling &gt;24{"\u2013"}48h<br/>
+          {"\u2022"} WHOOP &lt;60% {"\u2192"} easy/technique only<br/>
+          {"\u2022"} P90X: 1{"\u2013"}2 RIR always. Scale Sat if Fri was brutal<br/>
+          {"\u2022"} Deload wk 4: ~50% volume, halve HIIT reps<br/>
+          {"\u2022"} Freestyle/backstroke only {"\u2014"} no breaststroke kick
+        </div>
+      )}
+
+      <div className="day-card">
+        <div className="day-head">
+          <span className="emoji">{day.emoji}</span>
+          <h2>{day.label}</h2>
+          <span className={`day-tag ${day.tagCls}`}>{day.tag}</span>
+        </div>
+        <div className="day-sum">{day.summary}</div>
+
+        {mc > 0 && (
+          <div className="missed-banner">
+            {"\u26A1"} {mc} block{mc>1?"s":""} missed {"\u2014"} alternatives shown. Tap {"\u2715"} to undo.
+          </div>
+        )}
+
+        {day.blocks.map(b => (
+          <BlockCard key={b.id} block={b} deload={dl} missed={!!missed[b.id]} onToggle={toggle} />
+        ))}
+
+        {day.blocks.some(b=>b.skippable) && !mc && (
+          <div className="hint">Tap the circle to mark a block as missed {"\u2192"} alternatives appear</div>
+        )}
+      </div>
+
+      <div className="footer">
+        Tempo: 3-0-1 = 3s down, 0 pause, 1s up {"\u2022"} RPE 7{"\u2013"}8 {"\u2022"} Rest 45{"\u2013"}60s<br/>
+        Pull-up bar: Tue + Sat P90X {"\u2022"} Rows: Thu only {"\u2022"} Core: Tue + Thu + Sat
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
