@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A collection of personal training plan apps hosted as static HTML files on GitHub Pages. Each person gets their own standalone page with their full program, exercise videos, tracking, and progression logic — all running in the browser with zero backend, no logins, and no app store.
+A collection of personal training plan apps hosted as static HTML files on GitHub Pages. Each person gets their own standalone page with their full program, exercise videos, and progression logic — all running in the browser with zero backend, no logins, and no app store.
 
 **Live URLs:**
 
@@ -28,7 +28,7 @@ training-companion/
 ├── javier.html         ← Javier's plan (powerlifting periodization)
 ├── icon_lp.png         ← Home screen icon — teal heart
 ├── icon_rs.png         ← Home screen icon — Coach81 dark blue
-└── icon_brother.png    ← Home screen icon — dark with red arrows
+└── icon_javier.png     ← Home screen icon — dark with red arrows
 ```
 
 Each HTML file is fully self-contained: React, styling, data, and logic are all in one file. No build step, no dependencies to install, no server to run. Open the file in any browser and it works.
@@ -70,7 +70,7 @@ Same result — launches without browser chrome.
 
 ## How to Update a Plan
 
-The files live only in the GitHub repo, not on your local machine (unless you clone it). There are two ways to update:
+The files live only in the GitHub repo, not on your local machine (unless you clone it). There are three ways to update:
 
 ### Option A: Claude Code (recommended)
 
@@ -123,7 +123,7 @@ This works for small text changes (fixing a typo in an exercise name, changing a
 ```
 In the training-companion repo:
 1. Add [name].html and icon_[name].png
-2. Update index.html to add a link: "[Name]'s Training Plan" → [name].html
+2. Update index.html to add a link — pick a label that fits the plan (e.g. "[Name]'s Training Plan", "Powerlifting Plan") → [name].html
 3. Commit and push
 ```
 
