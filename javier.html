@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Powerlifting Companion</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Powerlifting">
+<meta name="theme-color" content="#111827">
+<link rel="apple-touch-icon" sizes="180x180" href="icon_brother.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#111827;--card:#1f2937;--card2:#283347;--text:#f3f4f6;--muted:#9ca3af;--light:#374151;
+  --red:#ef4444;--red-bg:rgba(239,68,68,.15);--red-border:rgba(239,68,68,.3);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,.15);--blue-border:rgba(59,130,246,.3);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.15);--amber-border:rgba(245,158,11,.3);
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,.12);--emerald-border:rgba(16,185,129,.3);
+  --purple:#a855f7;--purple-bg:rgba(168,85,247,.12);--purple-border:rgba(168,85,247,.3);
+  --slate:#64748b;--slate-bg:rgba(100,116,139,.15);--slate-border:rgba(100,116,139,.3);
+  --orange:#f97316;--orange-bg:rgba(249,115,22,.12);
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+.app{max-width:480px;margin:0 auto;padding:12px 12px 80px}
+
+/* Header */
+.header{text-align:center;margin-bottom:14px}
+.header h1{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.header .sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* Week/Phase bar */
+.phase-bar{background:var(--card);border:1px solid var(--light);border-radius:12px;padding:12px;margin-bottom:12px}
+.phase-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.phase-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;display:inline-block}
+.phase-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.week-row{display:flex;gap:3px;margin-top:8px}
+.wk-btn{flex:1;height:30px;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;position:relative}
+.wk-btn.off{background:var(--light);color:var(--muted)}
+.wk-btn.on{color:#fff}
+.wk-btn .num{position:relative;z-index:1}
+.wk-deload{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--amber)}
+
+/* Day selector */
+.day-bar{display:flex;gap:6px;margin-bottom:12px}
+.day-btn{flex:1;border:none;border-radius:12px;padding:12px 4px;text-align:center;cursor:pointer;transition:all .2s;font-family:inherit;position:relative}
+.day-btn.off{background:var(--card);color:var(--muted)}
+.day-btn.sel{background:var(--red);color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.3)}
+.day-btn .lbl{font-size:13px;font-weight:700}
+.day-btn .desc{font-size:9px;margin-top:3px;opacity:.7}
+
+/* Day card */
+.day-card{background:var(--card);border:1px solid var(--light);border-radius:14px;padding:16px;margin-bottom:12px}
+.day-title{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.day-title h2{font-size:18px;font-weight:700}
+.day-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
+.day-summary{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+/* Exercise blocks */
+.ex-block{border-left:3px solid;border-radius:0 10px 10px 0;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.ex-block:active{transform:scale(.99)}
+.ex-header{display:flex;align-items:center;gap:8px}
+.ex-icon{font-size:16px;width:24px;text-align:center}
+.ex-info{flex:1}
+.ex-name{font-size:14px;font-weight:600}
+.ex-prescription{font-size:12px;color:var(--muted);margin-top:2px}
+.ex-expand{color:var(--muted);font-size:12px;padding:4px}
+
+/* Exercise detail */
+.ex-detail{margin:10px 0 0 32px;font-size:12px;line-height:1.7}
+.ex-detail .label{color:var(--muted);font-weight:600}
+.ex-detail .note{color:var(--muted);font-style:italic;margin-top:4px}
+.vid-link{display:inline-block;font-size:10px;background:var(--red-bg);color:var(--red);padding:3px 8px;border-radius:5px;text-decoration:none;margin-top:6px;font-weight:600;transition:background .15s}
+.vid-link:hover{background:rgba(239,68,68,.25)}
+
+/* Periodization table */
+.period-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;margin-top:8px;border-radius:8px;overflow:hidden}
+.period-table th{background:var(--light);color:var(--muted);padding:6px 8px;text-align:center;font-weight:600}
+.period-table td{padding:6px 8px;text-align:center;border-top:1px solid var(--light);color:var(--text)}
+.period-table tr.active td{background:var(--red-bg);color:var(--red);font-weight:600}
+
+/* Panels */
+.panel-btn{width:100%;text-align:left;border:none;font-size:12px;padding:10px 14px;margin-bottom:6px;border-radius:10px;cursor:pointer;font-weight:600;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:8px}
+.panel-btn .arrow{transition:transform .2s}
+.panel-btn .arrow.open{transform:rotate(90deg)}
+.panel-btn.rpe{background:var(--emerald-bg);color:var(--emerald);border:1px solid var(--emerald-border)}
+.panel-btn.tips{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.panel-content{margin-bottom:10px;border-radius:10px;padding:12px;font-size:11px;line-height:1.7}
+.panel-content.rpe{background:var(--emerald-bg);border:1px solid var(--emerald-border);color:#6ee7b7}
+.panel-content.tips{background:var(--purple-bg);border:1px solid var(--purple-border);color:#c4b5fd}
+.panel-content b{font-weight:700}
+
+/* Footer */
+.footer{margin-top:16px;text-align:center;font-size:9px;color:var(--muted);line-height:1.8}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const YT = (q) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
+const E = { dash:"\u2013", mdash:"\u2014", times:"\u00d7", arrow:"\u2192", bullet:"\u2022", tri:"\u25b8", triD:"\u25be", play:"\u25b6" };
+
+// Phase logic
+function getPhase(week) {
+  if (week <= 4) return { name:"Hypertrophy / Base", phase:1, color:"var(--blue)", bg:"var(--blue-bg)", border:"var(--blue-border)", desc:"Higher reps, moderate intensity. Build work capacity and muscle." };
+  if (week <= 8) return { name:"Strength", phase:2, color:"var(--amber)", bg:"var(--amber-bg)", border:"var(--amber-border)", desc:"Lower reps, heavier loads. Build strength foundation." };
+  if (week <= 11) return { name:"Peaking", phase:3, color:"var(--red)", bg:"var(--red-bg)", border:"var(--red-border)", desc:"Low reps, near-max loads. Sharpen for maximal output." };
+  return { name:"Deload / Test", phase:4, color:"var(--emerald)", bg:"var(--emerald-bg)", border:"var(--emerald-border)", desc:"Deload or test new maxes." };
+}
+
+function getPrescription(phases, week) {
+  if (week <= 4) return phases[0];
+  if (week <= 8) return phases[1];
+  return phases[2];
+}
+
+const DAYS = [
+  {
+    key:"D1", label:"Day 1", short:"SQ+BN", tag:"SQUAT + BENCH", tagColor:"var(--red)",
+    summary:"Primary intensity day. Squat and bench at top percentages.",
+    exercises:[
+      { name:"Back Squat", icon:"\uD83C\uDFCB\uFE0F", color:"var(--red)", border:"var(--red-border)", bg:"var(--red-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"5\u00d75 @ 70\u201375%" },
+          { weeks:"Wks 5\u20138", rx:"4\u00d74 @ 77\u201382%" },
+          { weeks:"Wks 9\u201311", rx:"5\u00d72 @ 85\u201390%" },
+        ],
+        note:"Competition stance. Brace hard, control the descent. Aim for consistent depth every rep.", yt:"back squat powerlifting form" },
+      { name:"Bench Press", icon:"\uD83C\uDFCB\uFE0F", color:"var(--blue)", border:"var(--blue-border)", bg:"var(--blue-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"5\u00d75 @ 70\u201375%" },
+          { weeks:"Wks 5\u20138", rx:"4\u00d74 @ 77\u201382%" },
+          { weeks:"Wks 9\u201311", rx:"5\u00d72 @ 85\u201390%" },
+        ],
+        note:"Competition grip. Pause briefly at chest if practicing for meets. Leg drive throughout.", yt:"bench press powerlifting technique" },
+      { name:"Paused Squat", icon:"\u23F8\uFE0F", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"3\u00d75 @ moderate (stable load across all phases)",
+        note:"2\u20133 second pause in the hole. Builds positional strength and confidence. Keep ~60\u201365% of squat max.", yt:"paused squat technique" },
+      { name:"Row (Barbell/Cable)", icon:"\uD83D\uDCAA", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"4\u00d78\u201312",
+        note:"Barbell row, cable row, or Pendlay row. Pull to lower chest/upper belly. Keep upper back tight for bench carryover.", yt:"barbell row powerlifting" },
+    ]
+  },
+  {
+    key:"D2", label:"Day 2", short:"DEAD", tag:"DEADLIFT FOCUS", tagColor:"var(--amber)",
+    summary:"Deadlift primary. Bench secondary (lighter). Posterior chain accessories.",
+    exercises:[
+      { name:"Deadlift", icon:"\uD83C\uDFCB\uFE0F", color:"var(--amber)", border:"var(--amber-border)", bg:"var(--amber-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"4\u00d75 @ 70\u201375%" },
+          { weeks:"Wks 5\u20138", rx:"4\u00d73 @ 80\u201385%" },
+          { weeks:"Wks 9\u201311", rx:"5\u00d72 @ 85\u201392%" },
+        ],
+        note:"Conventional or sumo \u2014 whichever is competition stance. Reset between reps on heavy sets. Brace and wedge.", yt:"deadlift powerlifting setup" },
+      { name:"Bench Press (secondary)", icon:"\uD83C\uDFCB\uFE0F", color:"var(--blue)", border:"var(--blue-border)", bg:"var(--blue-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"4\u00d78 @ 65\u201370%" },
+          { weeks:"Wks 5\u20138", rx:"4\u00d76 @ 70\u201375%" },
+          { weeks:"Wks 9\u201311", rx:"3\u00d75 @ 75\u201380%" },
+        ],
+        note:"Lighter bench day for volume and technique. Focus on bar path consistency and speed off the chest.", yt:"bench press volume day" },
+      { name:"Romanian Deadlift", icon:"\uD83E\uDDBF", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"3\u00d78\u201310",
+        note:"Controlled eccentric, stretch hamstrings. Don't go to failure \u2014 leave 2\u20133 reps in reserve. Great for deadlift lockout.", yt:"romanian deadlift form" },
+      { name:"Pull-ups / Lat Pulldown", icon:"\uD83D\uDCAA", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"4\u00d78\u201312",
+        note:"Weighted pull-ups if bodyweight is easy. Lat pulldown as alternative. Full ROM, controlled negative.", yt:"pull ups for powerlifting" },
+      { name:"Core", icon:"\uD83C\uDFAF", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"3\u20134 sets",
+        note:"Ab wheel, hanging leg raises, Pallof press, or plank variations. Pick 1\u20132 exercises. Bracing strength directly supports all three lifts.", yt:"core exercises for powerlifting" },
+    ]
+  },
+  {
+    key:"D3", label:"Day 3", short:"BENCH", tag:"BENCH VOL + SQUAT 2", tagColor:"var(--blue)",
+    summary:"Bench volume day. Squat secondary. Upper body accessories.",
+    exercises:[
+      { name:"Bench Press (volume)", icon:"\uD83C\uDFCB\uFE0F", color:"var(--blue)", border:"var(--blue-border)", bg:"var(--blue-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"4\u00d78 @ 65\u201370%" },
+          { weeks:"Wks 5\u20138", rx:"4\u00d76 @ 70\u201375%" },
+          { weeks:"Wks 9\u201311", rx:"3\u00d75 @ 75\u201380%" },
+        ],
+        note:"Volume accumulation. Focus on speed and technique. Every rep should look the same.", yt:"bench press volume training" },
+      { name:"Close-Grip Bench", icon:"\uD83D\uDCAA", color:"var(--purple)", border:"var(--purple-border)", bg:"var(--purple-bg)",
+        fixed:"3\u00d76\u20138",
+        note:"Hands ~shoulder width. Builds tricep strength for lockout. Keep elbows tucked. RPE 7\u20138.", yt:"close grip bench press form" },
+      { name:"Squat (secondary)", icon:"\uD83C\uDFCB\uFE0F", color:"var(--red)", border:"var(--red-border)", bg:"var(--red-bg)",
+        phases:[
+          { weeks:"Wks 1\u20134", rx:"3\u00d76 @ 65\u201370%" },
+          { weeks:"Wks 5\u20138", rx:"3\u00d75 @ 70\u201375%" },
+          { weeks:"Wks 9\u201311", rx:"3\u00d73 @ 75\u201380%" },
+        ],
+        note:"Lighter squat day for frequency. Focus on speed out of the hole and consistent technique.", yt:"squat frequency powerlifting" },
+      { name:"Hamstring Curl / GHR", icon:"\uD83E\uDDBF", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"3\u00d710\u201312",
+        note:"Lying or seated hamstring curl, or glute-ham raise. Controlled tempo. Balances quad-dominant squat work.", yt:"hamstring curl for powerlifting" },
+      { name:"Lateral Raises + Triceps", icon:"\uD83D\uDCAA", color:"var(--slate)", border:"var(--slate-border)", bg:"var(--slate-bg)",
+        fixed:"3\u20134 sets each",
+        note:"Lateral raises: 3\u00d712\u201315. Triceps: pushdowns, overhead extensions, or dips \u2014 3\u00d710\u201312. Shoulder health + lockout strength.", yt:"lateral raises and tricep pushdown" },
+    ]
+  }
+];
+
+function ExCard({ ex, week, expanded, onToggle }) {
+  const phase = getPhase(week);
+  const currentRx = ex.phases ? getPrescription(ex.phases, week) : null;
+
+  return (
+    <div className="ex-block" style={{borderColor:ex.color, background:ex.bg}} onClick={onToggle}>
+      <div className="ex-header">
+        <div className="ex-icon">{ex.icon}</div>
+        <div className="ex-info">
+          <div className="ex-name">{ex.name}</div>
+          <div className="ex-prescription">
+            {currentRx ? currentRx.rx : ex.fixed}
+          </div>
+        </div>
+        <span className="ex-expand">{expanded ? E.triD : E.tri}</span>
+      </div>
+
+      {expanded && (
+        <div className="ex-detail">
+          {ex.phases && (
+            <table className="period-table">
+              <thead><tr><th>Phase</th><th>Prescription</th></tr></thead>
+              <tbody>
+                {ex.phases.map((p, i) => {
+                  const isActive = (i===0 && week<=4) || (i===1 && week>4 && week<=8) || (i===2 && week>8);
+                  return (
+                    <tr key={i} className={isActive?"active":""}>
+                      <td>{p.weeks}</td>
+                      <td>{p.rx}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          {ex.note && <div className="note">{ex.note}</div>}
+          <a href={YT(ex.yt||ex.name)} target="_blank" rel="noopener noreferrer" className="vid-link">{E.play} Video</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RPEPanel() {
+  return (
+    <div className="panel-content rpe">
+      <div style={{fontWeight:700,fontSize:12,marginBottom:6}}>RPE / Percentage Guide</div>
+      <div>{E.bullet} <b>70%</b> {E.arrow} ~RPE 6{E.dash}7 for sets of 5. Should feel controlled.</div>
+      <div>{E.bullet} <b>75{E.dash}80%</b> {E.arrow} ~RPE 7{E.dash}8. Challenging but repeatable.</div>
+      <div>{E.bullet} <b>85%</b> {E.arrow} ~RPE 8{E.dash}9. Heavy. 1{E.dash}2 reps in reserve on doubles.</div>
+      <div>{E.bullet} <b>90%+</b> {E.arrow} ~RPE 9{E.dash}9.5. Near-max. Technique must stay sharp.</div>
+      <div style={{marginTop:8}}>{E.bullet} <b>Accessory work:</b> RPE 7{E.dash}8. Don't grind accessories {E.mdash} save the grind for the main lifts.</div>
+      <div style={{marginTop:8}}>{E.bullet} <b>If % feels too heavy:</b> drop 2{E.dash}3% and hit the prescribed reps cleanly. Quality over ego.</div>
+    </div>
+  );
+}
+
+function TipsPanel() {
+  return (
+    <div className="panel-content tips">
+      <div style={{fontWeight:700,fontSize:12,marginBottom:6}}>Programming Notes</div>
+      <div>{E.bullet} <b>Rest between sets:</b> main lifts 3{E.dash}5 min. Accessories 90s{E.dash}2 min.</div>
+      <div>{E.bullet} <b>Warm-up:</b> ramp up in 3{E.dash}5 sets to working weight. Don't rush. Example: bar {E.arrow} 40% {E.arrow} 55% {E.arrow} 65% {E.arrow} working sets.</div>
+      <div>{E.bullet} <b>Deload (every 4th week or after week 11):</b> same exercises, 50{E.dash}60% of working weights, same reps. Active recovery.</div>
+      <div>{E.bullet} <b>Testing maxes:</b> after week 11 + deload. Work up in singles: opener (~90%) {E.arrow} second (~95%) {E.arrow} third (PR attempt).</div>
+      <div>{E.bullet} <b>Progression:</b> if all prescribed sets/reps are completed cleanly, add 2{E.dash}3% next time you repeat that day. If you miss reps, repeat same weight.</div>
+      <div>{E.bullet} <b>Frequency:</b> 3 days/week with at least 1 rest day between sessions. Example: Mon/Wed/Fri or Tue/Thu/Sat.</div>
+      <div>{E.bullet} <b>Accessories are flexible:</b> swap row/pulldown/curl variations freely. Keep the main lifts locked in.</div>
+    </div>
+  );
+}
+
+function App() {
+  const [week, setWeek] = useState(1);
+  const [dayIdx, setDayIdx] = useState(0);
+  const [expanded, setExpanded] = useState({});
+  const [showRPE, setShowRPE] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+
+  const phase = getPhase(week);
+  const day = DAYS[dayIdx];
+
+  const toggleEx = useCallback((name) => {
+    setExpanded(prev => ({ ...prev, [name]: !prev[name] }));
+  }, []);
+
+  return (
+    <div className="app">
+      <div className="header">
+        <h1>{E.bullet} Powerlifting Companion</h1>
+        <div className="sub">11-Week Periodized Program {E.bullet} Squat / Bench / Deadlift</div>
+        <div className="sub">Tap exercises to expand {E.arrow} tap Video for form reference</div>
+      </div>
+
+      {/* Phase/Week selector */}
+      <div className="phase-bar">
+        <div className="phase-top">
+          <span className="phase-badge" style={{background:phase.bg, color:phase.color, border:`1px solid ${phase.border}`}}>
+            Phase {phase.phase}: {phase.name}
+          </span>
+          <span style={{fontSize:11,color:"var(--muted)",marginLeft:"auto"}}>Week {week}/11</span>
+        </div>
+        <div className="phase-sub">{phase.desc}</div>
+        <div className="week-row">
+          {Array.from({length:11},(_, i) => i+1).map(w => {
+            const wp = getPhase(w);
+            const isOn = w === week;
+            return (
+              <button key={w} onClick={() => setWeek(w)}
+                className={`wk-btn ${isOn ? "on" : "off"}`}
+                style={isOn ? {background:wp.color, color:"#fff"} : {}}>
+                <span className="num">{w}</span>
+              </button>
+            );
+          })}
+        </div>
+        {(week === 4 || week === 8) && (
+          <div className="wk-deload">
+            {E.bullet} Consider a light deload week after this week before moving to the next phase.
+          </div>
+        )}
+      </div>
+
+      {/* Day selector */}
+      <div className="day-bar">
+        {DAYS.map((d, i) => (
+          <button key={d.key} onClick={() => { setDayIdx(i); setExpanded({}); }}
+            className={`day-btn ${dayIdx===i ? "sel" : "off"}`}>
+            <div className="lbl">{d.label}</div>
+            <div className="desc">{d.short}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Panels */}
+      <button onClick={() => { setShowRPE(!showRPE); setShowTips(false); }} className="panel-btn rpe">
+        <span className={`arrow ${showRPE?"open":""}`}>{E.tri}</span> RPE & Percentage Guide
+      </button>
+      {showRPE && <RPEPanel />}
+
+      <button onClick={() => { setShowTips(!showTips); setShowRPE(false); }} className="panel-btn tips">
+        <span className={`arrow ${showTips?"open":""}`}>{E.tri}</span> Programming Notes & Tips
+      </button>
+      {showTips && <TipsPanel />}
+
+      {/* Day card */}
+      <div className="day-card">
+        <div className="day-title">
+          <h2>{day.label}</h2>
+          <span className="day-tag" style={{background:day.tagColor+"22", color:day.tagColor, border:`1px solid ${day.tagColor}44`}}>{day.tag}</span>
+        </div>
+        <p className="day-summary">{day.summary}</p>
+
+        {day.exercises.map(ex => (
+          <ExCard key={ex.name} ex={ex} week={week}
+            expanded={!!expanded[ex.name]} onToggle={() => toggleEx(ex.name)} />
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="footer">
+        <div>Day 1: Squat + Bench (primary) {E.bullet} Day 2: Deadlift + Bench (secondary) {E.bullet} Day 3: Bench (volume) + Squat (secondary)</div>
+        <div>3 days/week {E.bullet} Rest 1+ days between sessions {E.bullet} Deload after each phase or week 11</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
